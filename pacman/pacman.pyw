@@ -1353,7 +1353,7 @@ def CheckInputs():
         sys.exit(0)
             
     elif thisGame.mode == 3:
-        if pygame.key.get_pressed()[ pygame.K_RETURN ] or (js!=None and js.get_button(JS_STARTBUTTON)):
+        if pygame.key.get_pressed()[ pygame.K_RETURN ]:# or (js!=None and js.get_button(JS_STARTBUTTON)):
             thisGame.StartNewGame()
             
 
