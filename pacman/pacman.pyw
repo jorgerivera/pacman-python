@@ -667,6 +667,180 @@ class ghost ():
                     self.currentPath = path.FindPath( (self.nearestRow, self.nearestCol), (randRow, randCol) )
                     self.FollowNextPathWay()
 
+class human_ghost ():
+    def __init__ (self, ghostID, controller=None):
+        self.x = 0
+        self.y = 0
+        self.velX = 0
+        self.velY = 0
+        self.speed = 1
+        
+        self.nearestRow = 0
+        self.nearestCol = 0
+        
+        self.id = ghostID
+        
+        # ghost "state" variable
+        # 1 = normal
+        # 2 = vulnerable
+        # 3 = spectacles
+        self.state = 1
+        
+        self.homeX = 0
+        self.homeY = 0
+        
+        self.currentPath = ""
+        
+        self.anim = {}
+        for i in range(1, 7, 1):
+            self.anim[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","ghost " + str(i) + ".gif")).convert()
+            
+            # change the ghost color in this frame
+            for y in range(0, 16, 1):
+                for x in range(0, 16, 1):
+                
+                    if self.anim[i].get_at( (x, y) ) == (255, 0, 0, 255):
+                        # default, red ghost body color
+                        self.anim[i].set_at( (x, y), ghostcolor[ self.id ] )
+            
+        self.animFrame = 1
+        self.animDelay = 0
+        
+    def Draw (self):
+        
+        if thisGame.mode == 3:
+            return False
+        
+        
+        # ghost eyes --
+        for y in range(4, 8, 1):
+            for x in range(3, 7, 1):
+                self.anim[ self.animFrame ].set_at( (x, y), (255, 255, 255, 255) )  
+                self.anim[ self.animFrame ].set_at( (x+6, y), (255, 255, 255, 255) )
+                
+                if player.x > self.x and player.y > self.y:
+                    #player is to lower-right
+                    pupilSet = (5, 6)
+                elif player.x < self.x and player.y > self.y:
+                    #player is to lower-left
+                    pupilSet = (3, 6)
+                elif player.x > self.x and player.y < self.y:
+                    #player is to upper-right
+                    pupilSet = (5, 4)
+                elif player.x < self.x and player.y < self.y:
+                    #player is to upper-left
+                    pupilSet = (3, 4)
+                else:
+                    pupilSet = (4, 6)
+                    
+        for y in range(pupilSet[1], pupilSet[1] + 2, 1):
+            for x in range(pupilSet[0], pupilSet[0] + 2, 1):
+                self.anim[ self.animFrame ].set_at( (x, y), (0, 0, 255, 255) )  
+                self.anim[ self.animFrame ].set_at( (x+6, y), (0, 0, 255, 255) )    
+        # -- end ghost eyes
+        
+        if self.state == 1:
+            # draw regular ghost (this one)
+            screen.blit (self.anim[ self.animFrame ], (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+        elif self.state == 2:
+            # draw vulnerable ghost
+            
+            if thisGame.ghostTimer > 100:
+                # blue
+                screen.blit (ghosts[4].anim[ self.animFrame ], (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+            else:
+                # blue/white flashing
+                tempTimerI = int(thisGame.ghostTimer / 10)
+                if tempTimerI == 1 or tempTimerI == 3 or tempTimerI == 5 or tempTimerI == 7 or tempTimerI == 9:
+                    screen.blit (ghosts[5].anim[ self.animFrame ], (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+                else:
+                    screen.blit (ghosts[4].anim[ self.animFrame ], (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+            
+        elif self.state == 3:
+            # draw glasses
+            screen.blit (tileIDImage[ tileID[ 'glasses' ] ], (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+        
+        if thisGame.mode == 6 or thisGame.mode == 7:
+            # don't animate ghost if the level is complete
+            return False
+        
+        self.animDelay += 1
+        
+        if self.animDelay == 2:
+            self.animFrame += 1 
+        
+            if self.animFrame == 7:
+                # wrap to beginning
+                self.animFrame = 1
+                
+            self.animDelay = 0
+            
+    def Move (self):
+        
+
+        self.x += self.velX
+        self.y += self.velY
+        
+        self.nearestRow = int(((self.y + 8) / 16))
+        self.nearestCol = int(((self.x + 8) / 16))
+
+        if (self.x % 16) == 0 and (self.y % 16) == 0:
+            # if the ghost is lined up with the grid again
+            # meaning, it's time to go to the next path item
+            
+            if (self.currentPath):
+                self.currentPath = self.currentPath[1:]
+                self.FollowNextPathWay()
+        
+            else:
+                self.x = self.nearestCol * 16
+                self.y = self.nearestRow * 16
+            
+                # chase pac-man
+                self.currentPath = path.FindPath( (self.nearestRow, self.nearestCol), (player.nearestRow, player.nearestCol) )
+                self.FollowNextPathWay()
+            
+    def FollowNextPathWay (self):
+        
+        # print "Ghost " + str(self.id) + " rem: " + self.currentPath
+        
+        # only follow this pathway if there is a possible path found!
+        if not self.currentPath == False:
+        
+            if len(self.currentPath) > 0:
+                if self.currentPath[0] == "L":
+                    (self.velX, self.velY) = (-self.speed, 0)
+                elif self.currentPath[0] == "R":
+                    (self.velX, self.velY) = (self.speed, 0)
+                elif self.currentPath[0] == "U":
+                    (self.velX, self.velY) = (0, -self.speed)
+                elif self.currentPath[0] == "D":
+                    (self.velX, self.velY) = (0, self.speed)
+                    
+            else:
+                # this ghost has reached his destination!!
+                
+                if not self.state == 3:
+                    # chase pac-man
+                    self.currentPath = path.FindPath( (self.nearestRow, self.nearestCol), (player.nearestRow, player.nearestCol) )
+                    self.FollowNextPathWay()
+                
+                else:
+                    # glasses found way back to ghost box
+                    self.state = 1
+                    self.speed = self.speed / 4
+                    
+                    # give ghost a path to a random spot (containing a pellet)
+                    (randRow, randCol) = (0, 0)
+
+                    while not thisLevel.GetMapTile((randRow, randCol)) == tileID[ 'pellet' ] or (randRow, randCol) == (0, 0):
+                        randRow = random.randint(1, thisLevel.lvlHeight - 2)
+                        randCol = random.randint(1, thisLevel.lvlWidth - 2)
+
+                    self.currentPath = path.FindPath( (self.nearestRow, self.nearestCol), (randRow, randCol) )
+                    self.FollowNextPathWay()
+
+
 class fruit ():
     def __init__ (self):
         # when fruit is not in use, it's in the (-1, -1) position off-screen.
@@ -779,7 +953,7 @@ class fruit ():
 
 class pacman ():
     
-    def __init__ (self):
+    def __init__ (self, index=1, controller=None):
         self.x = 0
         self.y = 0
         self.velX = 0
@@ -798,13 +972,15 @@ class pacman ():
         self.anim_pacmanD = {}
         self.anim_pacmanS = {}
         self.anim_pacmanCurrent = {}
+
+        self.controller = controller
         
         for i in range(1, 9, 1):
-            self.anim_pacmanL[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-l " + str(i) + ".gif")).convert()
-            self.anim_pacmanR[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-r " + str(i) + ".gif")).convert()
-            self.anim_pacmanU[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-u " + str(i) + ".gif")).convert()
-            self.anim_pacmanD[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-d " + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman.gif")).convert()
+            self.anim_pacmanL[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-l "+str(index) + str(i) + ".gif")).convert()
+            self.anim_pacmanR[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-r "+str(index) + str(i) + ".gif")).convert()
+            self.anim_pacmanU[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-u "+str(index) + str(i) + ".gif")).convert()
+            self.anim_pacmanD[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-d "+str(index) + str(i) + ".gif")).convert()
+            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman"+str(index)+".gif")).convert()
 
         self.pelletSndNum = 0
         
@@ -1353,7 +1529,7 @@ def CheckInputs():
         sys.exit(0)
             
     elif thisGame.mode == 3:
-        if pygame.key.get_pressed()[ pygame.K_RETURN ] or (js!=None and js.get_button(JS_STARTBUTTON)):
+        if pygame.key.get_pressed()[ pygame.K_RETURN ]:# or (js!=None and js.get_button(JS_STARTBUTTON)):
             thisGame.StartNewGame()
             
 
@@ -1425,7 +1601,9 @@ def GetCrossRef ():
 # ___/  main code block  \_____________________________________________________
 
 # create the pacman
+player = pacman(index=1)
 player = pacman()
+player2 = pacman(index=2)
 
 # create a path_finder object
 path = path_finder()
@@ -1452,11 +1630,12 @@ print thisGame.screenSize
 window = pygame.display.set_mode( thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE )
 
 # initialise the joystick
-if pygame.joystick.get_count()>0:
-  if JS_DEVNUM<pygame.joystick.get_count(): js=pygame.joystick.Joystick(JS_DEVNUM)
-  else: js=pygame.joystick.Joystick(0)
-  js.init()
-else: js=None
+#if pygame.joystick.get_count()>0:
+#  if JS_DEVNUM<pygame.joystick.get_count(): js=pygame.joystick.Joystick(JS_DEVNUM)
+#  else: js=pygame.joystick.Joystick(0)
+#  js.init()
+#else: 
+js=None
 
 while True: 
 
