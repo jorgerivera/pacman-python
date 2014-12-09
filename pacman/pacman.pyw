@@ -536,7 +536,7 @@ class ghost ():
         self.animFrame = 1
         self.animDelay = 0
 
-	for i in range(1, 7, 1):
+        for i in range(1, 7, 1):
             self.anim[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","ghost " + str(i) + ".gif")).convert()
             
             # change the ghost color in this frame
@@ -1639,6 +1639,17 @@ def GetCrossRef ():
 
 #      __________________
 # ___/  main code block  \_____________________________________________________
+
+# detect serial ports
+dev = os.listdir('/dev')
+serial_ports = []
+for d in dev:
+    if 'ttyACM' in d:
+        serial_ports.append('/dev/%s' % d)
+    if 'ttyUSB' in d:
+        serial_ports.append('/dev/%s' % d)
+
+
 
 # create the pacman
 player = pacman(index=1)
