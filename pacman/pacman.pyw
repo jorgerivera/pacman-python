@@ -724,6 +724,17 @@ class human_ghost ():
         self.animFrame = 1
         self.animDelay = 0
         
+        
+    def KeyPressed (self):
+        if (controller!=None):
+            data = controller.read()
+            if data in [ 'W', 'A', 'S', 'D', 'I', 'P', 'O', 'J', 'K', 'L' ]:
+                return data
+            else:
+                return None                
+        else:
+            return None
+        
     def Draw (self):
         
         if thisGame.mode == 3:
@@ -1528,6 +1539,8 @@ class level ():
         
         player.anim_pacmanCurrent = player.anim_pacmanS
         player.animFrame = 3
+        player2.anim_pacmanCurrent = player.anim_pacmanS
+        player2.animFrame = 3
 
 
 def CheckIfCloseButton(events):
@@ -1641,6 +1654,8 @@ def GetCrossRef ():
 # ___/  main code block  \_____________________________________________________
 
 # detect serial ports
+import os, serial
+
 dev = os.listdir('/dev')
 serial_ports = []
 for d in dev:
@@ -1649,11 +1664,13 @@ for d in dev:
     if 'ttyUSB' in d:
         serial_ports.append('/dev/%s' % d)
 
-
+controllers = []
+for sp in serial_ports:
+    controllers.append(serial.Serial(sp, 9600, timeout=1))
 
 # create the pacman
 player = pacman(index=1)
-#player2 = pacman(index=2)
+player2 = pacman(index=2)
 
 # create a path_finder object
 path = path_finder()
@@ -1664,6 +1681,14 @@ ghosts[0] = human_ghost(0)
 for i in range(1, 6, 1):
     # remember, ghost[4] is the blue, vulnerable ghost
     ghosts[i] = ghost(i)
+    
+human_players = [ player, player2 ]
+for g in ghosts:
+    if type(g)==human_ghost:
+        human_players.append(g)
+        
+print human_players
+
     
 # create piece of fruit
 thisFruit = fruit()
@@ -1698,6 +1723,7 @@ while True:
         
         thisGame.modeTimer += 1
         player.Move()
+        player2.Move()
         for i in range(0, 4, 1):
             ghosts[i].Move()
         thisFruit.Move()
@@ -1789,6 +1815,7 @@ while True:
             ghosts[i].Draw()
         thisFruit.Draw()
         player.Draw()
+        player2.Draw()
         
         if thisGame.mode == 3:
                 screen.blit(thisGame.imHiscores,(32,256))
