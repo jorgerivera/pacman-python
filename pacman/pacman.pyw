@@ -496,7 +496,7 @@ class path_finder ():
         
 class ghost ():
 
-if controller=None
+#if controller=None
 
     def __init__ (self, ghostID):
         self.x = 0
@@ -795,7 +795,7 @@ class human_ghost ():
             
     def Move (self):
         
- 	self.nearestRow = int(((self.y + 8) / 16))
+        self.nearestRow = int(((self.y + 8) / 16))
         self.nearestCol = int(((self.x + 8) / 16))
 
         # make sure the current velocity will not cause a collision before moving
@@ -806,6 +806,11 @@ class human_ghost ():
             
             # check for collisions with other tiles (pellets, etc)
             thisLevel.CheckIfHitSomething((self.x, self.y), (self.nearestRow, self.nearestCol))	
+        else:
+            # we're going to hit a wall -- stop moving
+            self.velX = 0
+            self.velY = 0
+            
         self.x += self.velX
         self.y += self.velY
         
@@ -1004,11 +1009,11 @@ class pacman ():
         self.controller = controller
         
         for i in range(1, 9, 1):
-            self.anim_pacmanL[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-l "+str(index) + str(i) + ".gif")).convert()
-            self.anim_pacmanR[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-r "+str(index) + str(i) + ".gif")).convert()
-            self.anim_pacmanU[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-u "+str(index) + str(i) + ".gif")).convert()
-            self.anim_pacmanD[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-d "+str(index) + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman"+str(index)+".gif")).convert()
+            self.anim_pacmanL[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-l " + str(i) + ".gif")).convert()
+            self.anim_pacmanR[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-r "+ str(i) + ".gif")).convert()
+            self.anim_pacmanU[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-u " + str(i) + ".gif")).convert()
+            self.anim_pacmanD[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman-d "+ str(i) + ".gif")).convert()
+            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH,"res","sprite","pacman"+".gif")).convert()
 
         self.pelletSndNum = 0
         
@@ -1508,8 +1513,9 @@ class level ():
                 randCol = random.randint(1, self.lvlWidth - 2)
             
             # print "Ghost " + str(i) + " headed towards " + str((randRow, randCol))
-            ghosts[i].currentPath = path.FindPath( (ghosts[i].nearestRow, ghosts[i].nearestCol), (randRow, randCol) )
-            ghosts[i].FollowNextPathWay()
+            if type(ghosts[i])==ghost:
+                ghosts[i].currentPath = path.FindPath( (ghosts[i].nearestRow, ghosts[i].nearestCol), (randRow, randCol) )
+                ghosts[i].FollowNextPathWay()
             
         thisFruit.active = False
             
@@ -1552,6 +1558,12 @@ def CheckInputs():
             if not thisLevel.CheckIfHitWall((player.x, player.y - player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = -player.speed
+                
+        elif pygame.key.get_pressed()[ pygame.K_d ]:
+            if not thisLevel.CheckIfHitWall((ghosts[0].x + ghosts[0].speed, ghosts[0].y), (ghosts[0].nearestRow, ghosts[0].nearestCol)): 
+                ghosts[0].velX = ghosts[0].speed
+                ghosts[0].velY = 0
+                
                 
     if pygame.key.get_pressed()[ pygame.K_ESCAPE ]:
         sys.exit(0)
@@ -1630,15 +1642,15 @@ def GetCrossRef ():
 
 # create the pacman
 player = pacman(index=1)
-player = pacman()
-player2 = pacman(index=2)
+#player2 = pacman(index=2)
 
 # create a path_finder object
 path = path_finder()
 
 # create ghost objects
 ghosts = {}
-for i in range(0, 6, 1):
+ghosts[0] = human_ghost(0)
+for i in range(1, 6, 1):
     # remember, ghost[4] is the blue, vulnerable ghost
     ghosts[i] = ghost(i)
     
