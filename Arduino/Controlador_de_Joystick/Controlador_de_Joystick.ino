@@ -1,73 +1,88 @@
 
-
-
 int x;
 int y;
 
 int x_cero;
 int y_cero;
 
-int Sensibilidad=100;
+int Sensibilidadx=400;
+int Sensibilidady=200;
 
 void evaluarjoystick(){
 
-  Serial.println();
-  
+   
   y= analogRead(A0);
-  Serial.println(y);
-  
-  x= analogRead(A1);
-  Serial.println(x);  
-  
-  if (x>x_cero+Sensibilidad){
-
-    Serial.println('d');
     
+  x= analogRead(A1);
+    
+  if (x>x_cero+Sensibilidadx){
+
+    Serial.print('d');
+    
+  } else if (x<x_cero-Sensibilidadx){
+
+    Serial.print('a');
+
+  } else
+
+  if (y>y_cero+Sensibilidady){
+
+    Serial.print('w');
+
+  } else if (y<y_cero-Sensibilidady){
+
+    Serial.print('s');
+
   }
+}
 
-  if (x<x_cero-Sensibilidad){
+void evaluarBotones(){
 
-    Serial.println('a');
-
+   if (digitalRead(3)==LOW){
+    Serial.print("Start");
   }
-
-  if (y>y_cero+Sensibilidad){
-
-    Serial.println('w');
-
+  if (digitalRead(4)==LOW){
+    Serial.print("Pausa");
   }
-
-  if (y<y_cero-Sensibilidad){
-
-    Serial.println('s');
-
+if (digitalRead(5)==LOW){
+    Serial.print('L');
   }
-
-
-
-
+if (digitalRead(6)==LOW){
+    Serial.print('K');
+  }
+if (digitalRead(7)==LOW){
+    Serial.print("J");
+  }  
+  if (digitalRead(8)==LOW){
+    Serial.print('I');
+  }
+  if (digitalRead(9)==LOW){
+    Serial.print('O');
+  }
 }
 
 void setup (){
 
-  Serial.println();
-  
   y_cero= analogRead(A0);
-  Serial.println(y_cero);
   
   x_cero= analogRead(A1);
-  Serial.println(x_cero);
   
-  Serial.begin(9200);
-
-
+  Serial.begin(9600);
+  
+  pinMode(3, INPUT);
+  pinMode(4, INPUT);
+  pinMode(5, INPUT);
+  pinMode(6, INPUT);
+  pinMode(7, INPUT);
+  pinMode(8, INPUT);
+  pinMode(9, INPUT);
+  
 }
 
 void loop (){
   
   evaluarjoystick();
   
-  delay (1000);
-
+  evaluarBotones();
 }
 

@@ -1900,8 +1900,9 @@ for i in range(1, 6, 1):
     ghosts[i] = ghost(i)
     
 human_players = [ player, player2 ]
-for g in ghosts:
-    if type(g)==human_ghost:
+for k,g in ghosts.iteritems():
+
+    if isinstance(g, human_ghost):
         human_players.append(g)
         
 print human_players
