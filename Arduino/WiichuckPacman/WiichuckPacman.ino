@@ -32,20 +32,20 @@ void loop()
         accx  = nunchuck_joyx(); // ranges from approx 70 - 182
          
           if (accx>222){
-              Serial.println('d');
+              Serial.print('d');
   
           }
           if (accx<37){
-          Serial.println('a');
+          Serial.print('a');
           }
         accy  = nunchuck_joyy(); // ranges from approx 65 - 173
         
         if (accy>224){
-         Serial.println('w');
+         Serial.print('w');
         }
         
         if(accy<38){
-        Serial.println('s');
+        Serial.print('s');
         }
         zbut = nunchuck_zbutton();
         cbut = nunchuck_cbutton(); 
